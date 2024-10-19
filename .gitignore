@@ -1,0 +1,10 @@
+**/*.xml
+**/*.csv
+**/*.png
+**/*.pdf
+**/*.txt
+**/*.pyc
+**/*.html
+**/*.zip
+**/*.tar.gz
+Manifest.toml
