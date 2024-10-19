@@ -7,4 +7,5 @@
 **/*.html
 **/*.zip
 **/*.tar.gz
+download_utils.jl
 Manifest.toml
