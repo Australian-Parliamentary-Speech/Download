@@ -181,6 +181,31 @@ function step3(step2_exist_fn,step2_html_fn,step2_missing_fn)
     end
 end
 
+function find_1997()
+    function if_link_sgml(link)
+        return occursin("sgml",link)
+    end
+    today_ = today()
+    dir_step1 = "sitemap_xmls_step1"
+    filelist = readdir("$dir_step1/")
+    open("1995.csv","w") do io
+        for xml_file in filelist
+            xdoc = readxml("$dir_step1/$xml_file")
+            soup = root(xdoc)
+            eles = elements(soup)
+            for ele in eles
+                for l in elements(ele)
+                    link = l.content
+                    if if_link_sgml(link)
+                        @show link
+                        println(io,link)
+                    end
+                end
+            end
+        end
+    end
+end
+
 function step2(dir_step1,step2_html_fn)
     function if_link_hansard(link)
         return occursin("hansardr80",link) || occursin("hansardr",link)
