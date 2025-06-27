@@ -151,6 +151,7 @@ function step4(step2_final_fn,dir_step4)
         repeat = 0
         while continue_
             try
+                @show html
                 response = get_response(html)
                 html_content = String(response.body)
                 query = find_query_from_url(html)
@@ -275,6 +276,6 @@ end
 
 
 if abspath(PROGRAM_FILE) == @__FILE__
-    main(:house)
+    main(:senate)
 end
 
