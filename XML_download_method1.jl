@@ -8,7 +8,24 @@ using EzXML
 using Dates
 using ProgressMeter
 using Logging
+using ArgParse
 include("utils.jl")
+
+function get_args()
+    s = ArgParseSettings()
+    @add_arg_table s begin
+        "which_house"
+            required = true
+    end
+    return parse_args(s)
+end
+
+function main()
+    args = get_args()
+    which_house = args["which_house"]
+    main(which_house)
+end
+    
 
 function dir_name(which_house)
     today_ = today()
@@ -276,6 +293,6 @@ end
 
 
 if abspath(PROGRAM_FILE) == @__FILE__
-    main(:senate)
+    main()
 end
 
