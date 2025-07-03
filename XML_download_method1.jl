@@ -24,7 +24,7 @@ end
 function main()
     args = get_args()
     which_house = args["which_house"]
-    main(which_house)
+    main(Symbol(which_house))
 end
     
 
