@@ -44,7 +44,7 @@ function main(which_house)
 
     exist_today = filter(x -> occursin("$today_", x), readdir("$inter_csv_path/"))
     if length(exist_today) != 0
-        @error "today's file already exist, running risk overwriting. pleasde delete them first"
+        @error "today's file already exist, running risk overwriting. pleasde delete all directories first"
     else
         log_dir = name_dict["log"]
         create_dir(log_dir) 
