@@ -25,6 +25,8 @@ or
 
 The XML files should be in the directory sitemap\_xmls\_senate or sitemap\_xmls\_house.
 
+
+# Technical details 
 ## logfile
 The logfiles are in sitemap\_logfiles/. It contains information on how many links in total were detected (to compare with the parlinfo website) and how many missing were updated from this run.
 
