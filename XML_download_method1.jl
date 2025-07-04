@@ -277,7 +277,7 @@ function step2(dir_step1,step2_html_fn,which_house)
 end
 
 function step1(url,dir_step1)
-    print("The first step started, it is downloadind the second layer of the XML files...")
+    print("The first step started, it is downloading the second layer of the XML files...")
     create_dir("$(dir_step1)/")
     download_xml(url,"xml_for_step1.xml")
     xdoc = readxml("xml_for_step1.xml")
