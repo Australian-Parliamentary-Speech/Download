@@ -8,5 +8,6 @@
 **/*.html
 **/*.zip
 **/*.tar.gz
+*.text
 #download_utils.jl
 Manifest.toml
