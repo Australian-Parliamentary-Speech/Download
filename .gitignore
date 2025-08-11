@@ -1,6 +1,7 @@
 **/*.xml
 **/*.csv
 **/*.png
+*.csv
 **/*.pdf
 **/*.txt
 **/*.pyc
