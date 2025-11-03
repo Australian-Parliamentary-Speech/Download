@@ -30,7 +30,7 @@ end
 
 function dir_name(which_house)
     today_ = today()
-    return Dict(1 => "sitemap_xmls_step1_$(which_house)",4 => "sitemap_htmls_step4_$(today_)$(which_house)", 6 => "sitemap_xmls_$(which_house)", "inter" => "sitemap_inter_csvs_$(which_house)", "log" => "sitemap_logfiles_$(which_house)")
+    return Dict(1 => "sitemap_xmls_step1_$(which_house)",4 => "sitemap_htmls_step4_$(today_)$(which_house)", 6 => "$(which_house)_xmls", "inter" => "sitemap_inter_csvs_$(which_house)", "log" => "sitemap_logfiles_$(which_house)")
 end
 
 
