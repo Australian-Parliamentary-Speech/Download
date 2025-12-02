@@ -42,24 +42,19 @@ function main(which_house)
     inter_csv_path = name_dict["inter"]
     create_dir(inter_csv_path)
 
-    exist_today = filter(x -> occursin("$today_", x), readdir("$inter_csv_path/"))
-    if length(exist_today) != 0
-        @error "today's file already exist, running risk overwriting. pleasde delete all directories first"
-    else
-        log_dir = name_dict["log"]
-        create_dir(log_dir) 
-        logio = open("$(log_dir)/log_$today_.txt","w+")
-        logger = SimpleLogger(logio)
-        with_logger(logger) do
-            sitemap_run(which_house)
-        end
-        flush(logio)
-        close(logio)
+    log_dir = name_dict["log"]
+    create_dir(log_dir)
+    logio = open("$(log_dir)/log_$today_.txt","a")  # Changed to append mode
+    logger = SimpleLogger(logio)
+    with_logger(logger) do
+        sitemap_run(which_house)
     end
+    flush(logio)
+    close(logio)
 end
 
 #step1: extract all xml links from the first url
-#step2: extract all current up-to-date html links from all xml links 
+#step2: extract all current up-to-date html links from all xml links
 #step3: compare the current html links with the existing html links (if exists) and create a file containing all the missing htmls
 #step4: download the missing html files with query as their names
 #step5: extract the missing xml links into a new csv
@@ -76,40 +71,92 @@ function sitemap_run(which_house)
     previous_exist = false
     url = "https://parlinfo.aph.gov.au/sitemap/sitemapindex.xml"
     create_dir(inter_csv_path)
-    step1(url,dir_step1)
 
     step2_html_fn = "$(inter_csv_path)/sitemap_html_step2_$(today_).csv"
-    step2_exist_fn = filter(x -> occursin("sitemap_html_step2", x), readdir("$inter_csv_path/"))
-    n_total = step2(dir_step1,step2_html_fn,which_house)
-    @info n_total
     step2_missing_fn = "$(inter_csv_path)/sitemap_html_step2_missing.csv"
-    step2_final_fn = if length(step2_exist_fn) != 0
-        step3("$(inter_csv_path)/$(step2_exist_fn[1])",step2_html_fn,step2_missing_fn)
+    step5_xml_fn = "$(inter_csv_path)/sitemap_xml_step5_$(today_).csv"
+
+    # Check if step1 is already done
+    if !isdir(dir_step1) || length(readdir(dir_step1)) == 0
+        @info "Running step 1: Downloading sitemap XMLs..."
+        step1(url,dir_step1)
+    else
+        @info "Step 1 already completed ($(dir_step1) exists with files), skipping..."
+    end
+
+    # Check if step2 is already done
+    step2_exist_fn = filter(x -> occursin("sitemap_html_step2", x) && occursin("$(today_)", x), readdir("$inter_csv_path/"))
+    if !isfile(step2_html_fn)
+        @info "Running step 2: Extracting HTML links from XMLs..."
+        n_total = step2(dir_step1,step2_html_fn,which_house)
+        @info "Total HTML links: $n_total"
+    else
+        @info "Step 2 already completed ($step2_html_fn exists), skipping..."
+    end
+
+    # Check for previous runs (not from today)
+    step2_previous_fn = filter(x -> occursin("sitemap_html_step2", x) && !occursin("$(today_)", x) && !occursin("missing", x), readdir("$inter_csv_path/"))
+
+    step2_final_fn = if length(step2_previous_fn) != 0
+        if !isfile(step2_missing_fn)
+            @info "Running step 3: Finding missing HTML links compared to previous run..."
+            step3("$(inter_csv_path)/$(step2_previous_fn[1])",step2_html_fn,step2_missing_fn)
+        else
+            @info "Step 3 already completed ($step2_missing_fn exists), skipping..."
+        end
         previous_exist = true
         step2_missing_fn
     else
         step2_html_fn
     end
 
+    # Check if step4 is already done
     create_dir(dir_step4)
-    step4(step2_final_fn,dir_step4)
-
-    step5_xml_fn = "$(inter_csv_path)/sitemap_xml_step5_$(today_).csv"
-    step5(step5_xml_fn,dir_step4)
-
-    create_dir(dir_step6)
-    step6(step5_xml_fn,dir_step6)
-   
-    if previous_exist 
-        previous_html_fn = "$(inter_csv_path)/$(step2_exist_fn[1])"
-        extra_html_fn = step2_missing_fn
-        csv_concatenate(previous_html_fn,step2_missing_fn,step2_html_fn)
-        previous_xml_fn = filter(x -> occursin("sitemap_xml_step5", x), readdir("$inter_csv_path/"))[1]
-        extra_xml_fn = step5_xml_fn
-        csv_concatenate("$(inter_csv_path)/$(previous_xml_fn)",extra_xml_fn,extra_xml_fn)
-        rm(previous_html_fn)
-        rm("$(inter_csv_path)/$(previous_xml_fn)")
+    existing_htmls = isdir(dir_step4) ? readdir(dir_step4) : []
+    html_to_download = readlines(step2_final_fn)
+    if length(existing_htmls) < length(html_to_download) - 1  # -1 for header
+        @info "Running step 4: Downloading HTML files ($(length(existing_htmls)) of $(length(html_to_download)-1) already done)..."
+        step4(step2_final_fn,dir_step4)
+    else
+        @info "Step 4 already completed (all HTMLs downloaded), skipping..."
     end
+
+    # Check if step5 is already done
+    if !isfile(step5_xml_fn)
+        @info "Running step 5: Extracting XML links from HTMLs..."
+        step5(step5_xml_fn,dir_step4)
+    else
+        @info "Step 5 already completed ($step5_xml_fn exists), skipping..."
+    end
+
+    # Step6: Always check what XMLs need to be downloaded
+    create_dir(dir_step6)
+    @info "Running step 6: Downloading XML files..."
+    step6(step5_xml_fn,dir_step6)
+
+    # Cleanup previous files if this is an update run
+    if previous_exist
+        previous_html_fn = "$(inter_csv_path)/$(step2_previous_fn[1])"
+        if isfile(previous_html_fn) && isfile(step2_missing_fn)
+            csv_concatenate(previous_html_fn,step2_missing_fn,step2_html_fn)
+            rm(previous_html_fn)
+        end
+
+        previous_xml_fns = filter(x -> occursin("sitemap_xml_step5", x) && !occursin("$(today_)", x), readdir("$inter_csv_path/"))
+        if length(previous_xml_fns) > 0
+            previous_xml_fn = previous_xml_fns[1]
+            if isfile("$(inter_csv_path)/$(previous_xml_fn)")
+                csv_concatenate("$(inter_csv_path)/$(previous_xml_fn)",step5_xml_fn,step5_xml_fn)
+                rm("$(inter_csv_path)/$(previous_xml_fn)")
+            end
+        end
+
+        if isfile(step2_missing_fn)
+            rm(step2_missing_fn)
+        end
+    end
+
+    @info "All steps completed successfully!"
 end
 
 function step6(step5_xml_fn,dir_step6)
@@ -164,7 +211,15 @@ function step4(step2_final_fn,dir_step4)
         return m.captures[1]
     end
     html_list = readlines(step2_final_fn)
-    for html in html_list[2:end]
+    @showprogress for html in html_list[2:end]
+        # Check if file already exists
+        query = find_query_from_url(html)
+        filename = "$(dir_step4)/$(query).html"
+        if isfile(filename)
+            @debug "File $filename already exists, skipping..."
+            continue
+        end
+
         continue_ = true
         repeat = 0
         while continue_
@@ -172,25 +227,23 @@ function step4(step2_final_fn,dir_step4)
                 @show html
                 response = get_response(html)
                 html_content = String(response.body)
-                query = find_query_from_url(html)
-                filename = "$(dir_step4)/$(query).html"
                 open(filename, "w") do file
                     write(file,html_content)
                 end
                 continue_ = false
             catch e
-                print("Waiting for Internet to respond...") 
+                print("Waiting for Internet to respond...")
                 println("An error occurred: $e")
                 sleep(50)
                 continue_ = true
-            end 
+            end
             repeat += 1
             if repeat > 5
                 continue_ = false
                 @info "step4 failed html links: $(html)"
             end
         end
-    end   
+    end
 end
 
 function step3(step2_exist_fn,step2_html_fn,step2_missing_fn)

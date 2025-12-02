@@ -51,19 +51,26 @@ function download_xml_from_file(fn,dir_xml,sept="/",delim_=" ")
         day,month,year = split(cell,sept)
         return day,month,year
     end
-    open("download_debug.csv", "w") do io
+    open("download_debug.csv", "a") do io  # Changed to append mode
         for n in 1:length(urls)
             url = urls[n]
+            fname = ""
             if date_cells[n] != "N/A"
                 day,month,year = cell_to_date(date_cells[n])
                 fname = "$dir_xml/$year/$(year)_$(month)_$(day).xml"
                 create_dir("$dir_xml/$year/")
                 @show year
+
+                # Skip if file already exists
+                if isfile(fname)
+                    @debug "File $fname already exists, skipping..."
+                    continue
+                end
             end
             try
                 download_xml(url,fname)
-            catch
-                println(io,[url])
+            catch e
+                println(io,[url, e])
             end
         end
     end
