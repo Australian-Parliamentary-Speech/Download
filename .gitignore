@@ -1,0 +1,15 @@
+**/*.xml
+**/*.csv
+**/*.png
+*.csv
+**/*.pdf
+**/*.txt
+**/*.pyc
+**/*.html
+**/*.zip
+**/*.tar.gz
+*.text
+#download_utils.jl
+src/XML_download_method2.jl
+Manifest.toml
+output/

@@ -1,0 +1,25 @@
+name = "PSSSourceXML"
+uuid = "af97d874-fa58-45c9-9f9b-f897631dd46c"
+version = "1.0.0"
+authors = ["Eve Cheng <evecheng999@gmail.com>", "Patrick Armstrong <patrick.james.1998@gmail.com>"]
+
+[workspace]
+projects = ["test", "docs"]
+
+[deps]
+ArgParse = "c7e460c6-2fb9-53a9-8c5b-16f535851c63"
+Cascadia = "54eefc05-d75b-58de-a785-1a3403f0919f"
+Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
+EzXML = "8f5d6c58-4d21-5cfd-889c-e3ad7ee6a615"
+Gumbo = "708ec375-b3d6-5a57-a7ce-8257bf98657a"
+PSSUtils = "3b0d97d8-c816-44bb-9b91-056f8c661615"
+ProgressMeter = "92933f4c-e287-5a05-a399-4b506db050ca"
+
+[compat]
+ArgParse = "1.2.0"
+Cascadia = "1.0.2"
+Dates = "1.11.0"
+EzXML = "1.2.3"
+Gumbo = "0.8.3"
+ProgressMeter = "1.11.0"
+julia = "1.12"
